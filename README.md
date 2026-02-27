@@ -1,4 +1,4 @@
-# Máquina de Estados con Canvas (Ejemplo Didáctico)
+# Máquina de Estados con Canvas 
 
 ## Descripción
 
