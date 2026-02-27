@@ -1,15 +1,10 @@
 /**
  * Ejemplo didáctico (muy simple): Canvas + Máquina de Estados (FSM)
  * -----------------------------------------------------------------
- * Objetivo en clase:
- * - Mostrar cómo un programa puede modelarse como un autómata.
- * - Identificar claramente estados, acciones y transiciones.
- *
  * Estados:
  *   CREACION  -> definir qué recursos se cargarán
  *   PRECARGA  -> esperar a que las imágenes estén listas
  *   INICIO    -> ciclo principal (actualizar + dibujar)
- *
  */
 
 // ===========================
@@ -34,8 +29,9 @@ class NaveEspacial {
    * @param {number} x
    * @param {number} y
    * @param {HTMLImageElement} imagen
+   * @param {number} dx  Dirección inicial: 1 = derecha, -1 = izquierda
    */
-  constructor(x, y, imagen) {
+  constructor(x, y, imagen, dx = 1) {
     this.x = x;
     this.y = y;
     this.velocidad = 5;
@@ -44,8 +40,8 @@ class NaveEspacial {
     this.spriteW = 100;
     this.spriteH = 50;
 
-    // Movimiento automático horizontal (simple)
-    this.dx = 1;
+    // Dirección horizontal inicial (parámetro configurable)
+    this.dx = dx;
   }
 
   /**
@@ -70,13 +66,26 @@ class NaveEspacial {
 
   /**
    * Dibuja la nave.
+   * Si dx es negativo (va hacia la izquierda), la voltea horizontalmente.
    */
   dibujar(ctx) {
-    ctx.drawImage(
-      this.imagen,
-      0, 0, this.spriteW, this.spriteH,
-      this.x, this.y, this.spriteW, this.spriteH
-    );
+    if (this.dx === -1) {
+      // Voltear horizontalmente para que "mire" hacia la izquierda
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.drawImage(
+        this.imagen,
+        0, 0, this.spriteW, this.spriteH,
+        -(this.x + this.spriteW), this.y, this.spriteW, this.spriteH
+      );
+      ctx.restore();
+    } else {
+      ctx.drawImage(
+        this.imagen,
+        0, 0, this.spriteW, this.spriteH,
+        this.x, this.y, this.spriteW, this.spriteH
+      );
+    }
   }
 }
 
@@ -95,11 +104,13 @@ class Animacion {
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = document.body.clientHeight;
 
-    this.nave = null;
+    this.nave       = null;  // Nave original  → empieza moviéndose a la DERECHA
+    this.naveEnemiga = null; // Nave enemiga   → empieza moviéndose a la IZQUIERDA
   }
 
   /**
    * Crea objetos Image y asigna src.
+   * Ambas naves usan la misma imagen; se puede cambiar por una diferente.
    */
   cargarImagenes() {
     this.imagenes.nave = new Image();
@@ -120,102 +131,69 @@ class Animacion {
   }
 
   /**
-   * Inicializa la nave en posición aleatoria.
+   * Inicializa las naves en posiciones aleatorias.
    */
   inicializarEscena() {
     var spriteW = 100;
     var spriteH = 50;
 
+    // Nave original: empieza en posición aleatoria, dirección → derecha (dx=1)
     var x0 = randInt(0, Math.max(0, this.canvas.width - spriteW));
     var y0 = randInt(0, Math.max(0, this.canvas.height - spriteH));
+    this.nave = new NaveEspacial(x0, y0, this.imagenes.nave, 1);
 
-    this.nave = new NaveEspacial(x0, y0, this.imagenes.nave);
+    // Nave enemiga: empieza en posición aleatoria distinta, dirección → izquierda (dx=-1)
+    var x1 = randInt(0, Math.max(0, this.canvas.width - spriteW));
+    var y1 = randInt(0, Math.max(0, this.canvas.height - spriteH));
+    this.naveEnemiga = new NaveEspacial(x1, y1, this.imagenes.nave, -1);
   }
 
   /**
-   * Acción del estado INICIO.
+   * Acción del estado INICIO: actualiza y dibuja ambas naves.
    */
   actualizarYdibujar() {
     this.nave.mover(this.canvas.width);
+    this.naveEnemiga.mover(this.canvas.width);
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
     this.nave.dibujar(this.ctx);
-  }  /**
+    this.naveEnemiga.dibujar(this.ctx);
+  }
+
+  /**
    * Máquina de Estados Finita (FSM)
-   * --------------------------------
-   * Esta función representa el "controlador" del autómata.
-   *
-   * En cada llamada ocurre lo siguiente:
-   * 1) Se observa el estado actual (this.estado).
-   * 2) Se ejecuta la acción asociada a ese estado.
-   * 3) Si se cumple una condición, se realiza una TRANSICIÓN
-   *    cambiando el valor de this.estado.
-   * 4) Se programa el siguiente "tick" del autómata con setTimeout.
-   *
    */
   ejecutarMaquinaDeEstados() {
 
-    // ==================================================
     // ESTADO 1: CREACION
-    // Acción: definir qué recursos deben cargarse.
-    // Transición: pasa inmediatamente a PRECARGA.
-    // ==================================================
     if (this.estado === CREACION) {
-
-      // Acción asociada al estado
       this.cargarImagenes();
-
-      // Transición explícita del autómata:
-      // f(CREACION) -> PRECARGA
       this.estado = PRECARGA;
-
-      // Próximo paso del autómata
       setTimeout(this.ejecutarMaquinaDeEstados.bind(this), 100);
       return;
     }
 
-    // ==================================================
     // ESTADO 2: PRECARGA
-    // Acción: verificar si los recursos ya están listos.
-    // Transición: si imágenes listas -> INICIO
-    // ==================================================
     if (this.estado === PRECARGA) {
-
-      // Condición de transición
       if (this.imagenesListas()) {
-
-        // Acción antes de cambiar de estado
         this.inicializarEscena();
-
-        // f(PRECARGA, imagenes_listas) -> INICIO
         this.estado = INICIO;
       }
-
       setTimeout(this.ejecutarMaquinaDeEstados.bind(this), 100);
       return;
     }
 
-    // ==================================================
     // ESTADO 3: INICIO
-    // Acción: ejecutar el ciclo principal del sistema.
-    // No hay transición adicional (permanece en INICIO).
-    // ==================================================
     if (this.estado === INICIO) {
-
-      // Acción asociada al estado
       this.actualizarYdibujar();
-
-      // El autómata permanece en INICIO
-      // f(INICIO) -> INICIO
       setTimeout(this.ejecutarMaquinaDeEstados.bind(this), 100);
     }
   }
 }
-
 
 // ===========================
 // 4) Arranque
 // ===========================
 var animacion = new Animacion();
 animacion.ejecutarMaquinaDeEstados();
-
