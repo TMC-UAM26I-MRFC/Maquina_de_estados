@@ -31,7 +31,7 @@ class NaveEspacial {
    * @param {HTMLImageElement} imagen
    * @param {number} dx  Dirección inicial: 1 = derecha, -1 = izquierda
    */
-  constructor(x, y, imagen, dx = 1) {
+  constructor(x, y, imagen, dx = 1, nombre = "") {
     this.x = x;
     this.y = y;
     this.velocidad = 5;
@@ -42,6 +42,9 @@ class NaveEspacial {
 
     // Dirección horizontal inicial (parámetro configurable)
     this.dx = dx;
+
+    // Nombre que se mostrará encima de la nave
+    this.nombre = nombre;
   }
 
   /**
@@ -85,6 +88,21 @@ class NaveEspacial {
         0, 0, this.spriteW, this.spriteH,
         this.x, this.y, this.spriteW, this.spriteH
       );
+    }
+
+    // Dibujar el nombre encima de la nave
+    if (this.nombre) {
+      ctx.save();
+      ctx.font = "bold 16px Arial";
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 3;
+      ctx.textAlign = "center";
+      var centroX = this.x + this.spriteW / 2;
+      var arribaY = this.y - 8;
+      ctx.strokeText(this.nombre, centroX, arribaY); // borde negro
+      ctx.fillText(this.nombre, centroX, arribaY);   // texto blanco
+      ctx.restore();
     }
   }
 }
@@ -140,12 +158,12 @@ class Animacion {
     // Nave Vane: empieza en posición aleatoria, dirección → derecha (dx=1)
     var x0 = randInt(0, Math.max(0, this.canvas.width - spriteW));
     var y0 = randInt(0, Math.max(0, this.canvas.height - spriteH));
-    this.vane = new NaveEspacial(x0, y0, this.imagenes.nave, 1);
+    this.vane = new NaveEspacial(x0, y0, this.imagenes.nave, 1, "Vane");
 
     // Nave Mau: empieza en posición aleatoria distinta, dirección → izquierda (dx=-1)
     var x1 = randInt(0, Math.max(0, this.canvas.width - spriteW));
     var y1 = randInt(0, Math.max(0, this.canvas.height - spriteH));
-    this.mau = new NaveEspacial(x1, y1, this.imagenes.nave, -1);
+    this.mau = new NaveEspacial(x1, y1, this.imagenes.nave, -1, "Mau");
   }
 
   /**
