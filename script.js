@@ -104,8 +104,8 @@ class Animacion {
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = document.body.clientHeight;
 
-    this.nave       = null;  // Nave original  → empieza moviéndose a la DERECHA
-    this.naveEnemiga = null; // Nave enemiga   → empieza moviéndose a la IZQUIERDA
+    this.vane = null; // Nave Vane → empieza moviéndose a la DERECHA
+    this.mau  = null; // Nave Mau  → empieza moviéndose a la IZQUIERDA
   }
 
   /**
@@ -137,28 +137,28 @@ class Animacion {
     var spriteW = 100;
     var spriteH = 50;
 
-    // Nave original: empieza en posición aleatoria, dirección → derecha (dx=1)
+    // Nave Vane: empieza en posición aleatoria, dirección → derecha (dx=1)
     var x0 = randInt(0, Math.max(0, this.canvas.width - spriteW));
     var y0 = randInt(0, Math.max(0, this.canvas.height - spriteH));
-    this.nave = new NaveEspacial(x0, y0, this.imagenes.nave, 1);
+    this.vane = new NaveEspacial(x0, y0, this.imagenes.nave, 1);
 
-    // Nave enemiga: empieza en posición aleatoria distinta, dirección → izquierda (dx=-1)
+    // Nave Mau: empieza en posición aleatoria distinta, dirección → izquierda (dx=-1)
     var x1 = randInt(0, Math.max(0, this.canvas.width - spriteW));
     var y1 = randInt(0, Math.max(0, this.canvas.height - spriteH));
-    this.naveEnemiga = new NaveEspacial(x1, y1, this.imagenes.nave, -1);
+    this.mau = new NaveEspacial(x1, y1, this.imagenes.nave, -1);
   }
 
   /**
    * Acción del estado INICIO: actualiza y dibuja ambas naves.
    */
   actualizarYdibujar() {
-    this.nave.mover(this.canvas.width);
-    this.naveEnemiga.mover(this.canvas.width);
+    this.vane.mover(this.canvas.width);
+    this.mau.mover(this.canvas.width);
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.nave.dibujar(this.ctx);
-    this.naveEnemiga.dibujar(this.ctx);
+    this.vane.dibujar(this.ctx);
+    this.mau.dibujar(this.ctx);
   }
 
   /**
